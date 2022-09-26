@@ -4,42 +4,48 @@ import (
 	"context"
 	"fmt"
 
+	"time"
+
 	fluxhelmrelease "github.com/fluxcd/helm-controller/api/v2beta1"
 	prcontrollerephemeralenviov1alpha1 "github.com/manisbindra/pr-ephemeral-env-controller/api/v1alpha1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+)
 
-	cpv1beta1 "github.com/crossplane-contrib/provider-helm/apis/release/v1beta1"
+const (
+	FLUX_HELM_RELEASE_PREFIX    = "relpr-"
+	FLUX_POLL_INTERVAL          = 5 * time.Minute
+	FLUX_SOURCE_KIND            = "GitRepository"
+	FLUX_SOURCE_REPO_NAME_SPACE = "flux-system"
 )
 
 // Creates a Flux HelmRelease for the PR, the resource is created in the namespace specified in the CRD
-func (r *PREphemeralEnvControllerReconciler) CreateFluxHelmRelease(ctx context.Context, prDetails PRDetails, envCreationHelmRepo *prcontrollerephemeralenviov1alpha1.EnvCreationHelmRepo) error {
+func (r *PREphemeralEnvControllerReconciler) CreateFluxHelmRelease(ctx context.Context, prDetails PRDetails) error {
 
 	prNumberStr := fmt.Sprintf("%d", prDetails.Number)
-	releaseName := fmt.Sprintf("relpr-%d", prDetails.Number)
+	releaseName := fmt.Sprintf("%s%d", FLUX_HELM_RELEASE_PREFIX, prDetails.Number)
 	helmRelease := &fluxhelmrelease.HelmRelease{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      releaseName,
-			Namespace: envCreationHelmRepo.DestinationNamespace,
+			Namespace: r.EnvCreationHelmRepo.DestinationNamespace,
 		},
 		Spec: fluxhelmrelease.HelmReleaseSpec{
 			Chart: fluxhelmrelease.HelmChartTemplate{
 				Spec: fluxhelmrelease.HelmChartTemplateSpec{
-					Chart: envCreationHelmRepo.HelmChartPath,
+					Chart: r.EnvCreationHelmRepo.HelmChartPath,
 					SourceRef: fluxhelmrelease.CrossNamespaceObjectReference{
-						Kind:      sourceKind,
-						Name:      envCreationHelmRepo.FluxSourceRepoName,
-						Namespace: sourceRepoNameSpace,
+						Kind:      FLUX_SOURCE_KIND,
+						Name:      r.EnvCreationHelmRepo.FluxSourceRepoName,
+						Namespace: FLUX_SOURCE_REPO_NAME_SPACE,
 					},
-					Version: envCreationHelmRepo.ChartVersion,
+					Version: r.EnvCreationHelmRepo.ChartVersion,
 				},
 			},
 			Values: &apiextensionsv1.JSON{
 				Raw: []byte(`{"prNumber":` + prNumberStr + `, "prSHA":"` + prDetails.HeadSHA + `"}`),
 			},
-			Interval:    metav1.Duration{Duration: pollInterval},
+			Interval:    metav1.Duration{Duration: FLUX_POLL_INTERVAL},
 			ReleaseName: releaseName,
 		},
 	}
@@ -69,45 +75,23 @@ func (r *PREphemeralEnvControllerReconciler) DeleteFluxHelmRelease(ctx context.C
 	logger := log.FromContext(ctx)
 	logger.Info("Checking if any flux helm releases need to be deleted...")
 	for prNumber, helmRel := range helmReleases {
-		if _, ok := prDetails[prNumber]; !ok {
+		if prDet, ok := prDetails[prNumber]; !ok {
 			// Update status of PR on Github
-			mesg := fmt.Sprintf("submitting deletion request for flux helm release, PR %d ", prNumber)
-			r.Record.Event(prController, "Normal", "DeletionRequestSubmitted", mesg)
-			logger.Info("submitting deletion request for flux helm release...", "prNumber", prNumber)
+			r.UpdatePRStatus(ctx, prNumber, prDet.HeadSHA, "closed", "PR closed, deleting ephemeral environment")
+			mesg := fmt.Sprintf("Deletion request submitted for flux HelmRelease of prNumber: %d", prNumber)
+			r.Record.Event(prController, "Normal", "DelReqSubmitted", mesg)
+			logger.Info(mesg, "prNumber", prNumber)
 			if err := r.Client.Delete(ctx, &helmRel); err != nil {
 				mesg := fmt.Sprintf("unable to delete flux HelmRelease for prNumber: %d", prNumber)
 				r.Record.Event(prController, "Warning", "DeleteFailed", mesg)
-				logger.Error(err, "unable to delete flux HelmRelease")
+				logger.Error(err, mesg)
 				return err
 			}
 
-			// In some cases when using crossplane helm provider, the dependencies of crossplane helm release are deleted
-			// before the crossplane helm release itself. This causes the crossplane helm release to be stuck in deleting state.
-			// Adding workaround to remove the finalizer from the crossplane helm release, so that the deletion can proceed.
-			// In case of Argo cd this was handled directly using Argo CD sync wave annotations in the crossplane Helm Release resource.
-			rel := r.getCrossplaneHelmRelease(ctx, prNumber)
-			rel.ObjectMeta.Finalizers = []string{}
-			if err := r.Client.Update(ctx, rel); err != nil {
-				logger.Error(err, "unable to update Crossplane HelmRelease and remove finalizer, to proceed with deletion")
-				return err
-			}
-			logger.Info("deletion for helm release submitted", "prNumber", prNumber)
+			mesg = fmt.Sprintf("Deletion request submitted for flux HelmRelease of prNumber: %d", prNumber)
+			logger.Info(mesg, "prNumber", prNumber)
 		}
 	}
 
 	return nil
-}
-
-func (r *PREphemeralEnvControllerReconciler) getCrossplaneHelmRelease(ctx context.Context, prNum int) *cpv1beta1.Release {
-	logger := log.FromContext(ctx)
-	appHelmRelName := fmt.Sprintf("apphelmpr%d", prNum)
-
-	cpHlmRel := &cpv1beta1.Release{}
-
-	err := r.Get(ctx, types.NamespacedName{Name: appHelmRelName, Namespace: ""}, cpHlmRel)
-	if err != nil {
-		logger.Error(err, "unable to get HelmRelease")
-	}
-
-	return cpHlmRel
 }

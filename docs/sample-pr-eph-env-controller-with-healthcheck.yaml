@@ -1,11 +1,11 @@
 apiVersion: prcontroller.controllers.ephemeralenv.io/v1alpha1
 kind: PREphemeralEnvController
 metadata:
-  name: pr-eph-env-ctrlr-2
+  name: pr-eph-env-ctrlr-1
 spec:
   githubPRRepository:
     user: manisbindra
-    repo: ephemeral-poc1-app
+    repo: ephemeral-app
     tokenSecretRef: 
       name: tokensecret
       namespace: default
@@ -14,6 +14,7 @@ spec:
     fluxSourceRepoName: infra-repo-public
     helmChartPath: ephemeral-env
     chartVersion: 0.1.0
-    destinationNamespace: pr-helm-releases-2
+    destinationNamespace: pr-helm-releases
   interval: "60s"
+  envHealthCheckURLTemplate: "http://ephenvtestpr<<PR_NUMBER>>.eastus.cloudapp.azure.com"
 

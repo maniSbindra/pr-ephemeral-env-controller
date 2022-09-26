@@ -4,4 +4,4 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: CERTIFICATE_NAMESPACE/CERTIFICATE_NAME
-  name: prephemeralenvcontrollers.prcontroller.ephemeralenv.io.prcontroller.ephemeralenv.io
+  name: prephemeralenvcontrollers.prcontroller.controllers.ephemeralenv.io

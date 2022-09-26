@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	cpv1beta1 "github.com/crossplane-contrib/provider-helm/apis/release/v1beta1"
+	fluxhelmrelease "github.com/fluxcd/helm-controller/api/v2beta1"
 	prcontrollerephemeralenviov1alpha1 "github.com/manisbindra/pr-ephemeral-env-controller/api/v1alpha1"
 	"github.com/manisbindra/pr-ephemeral-env-controller/controllers"
 	//+kubebuilder:scaffold:imports
@@ -45,7 +46,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(prcontrollerephemeralenviov1alpha1.AddToScheme(scheme))
+	utilruntime.Must(fluxhelmrelease.AddToScheme(scheme))
 	utilruntime.Must(prcontrollerephemeralenviov1alpha1.AddToScheme(scheme))
 	utilruntime.Must(cpv1beta1.SchemeBuilder.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
@@ -75,7 +76,7 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "bcbe8346.prcontroller.ephemeralenv.io",
+		LeaderElectionID:       "bcbe8346.controllers.ephemeralenv.io",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly

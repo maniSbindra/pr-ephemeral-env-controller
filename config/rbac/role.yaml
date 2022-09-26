@@ -8,9 +8,18 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
   - secrets
   verbs:
   - get
+  - list
+  - watch
 - apiGroups:
   - helm.crossplane.io
   resources:
@@ -36,7 +45,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - prcontroller.ephemeralenv.io.prcontroller.ephemeralenv.io
+  - prcontroller.controllers.ephemeralenv.io
   resources:
   - prephemeralenvcontrollers
   verbs:
@@ -48,13 +57,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - prcontroller.ephemeralenv.io.prcontroller.ephemeralenv.io
+  - prcontroller.controllers.ephemeralenv.io
   resources:
   - prephemeralenvcontrollers/finalizers
   verbs:
   - update
 - apiGroups:
-  - prcontroller.ephemeralenv.io.prcontroller.ephemeralenv.io
+  - prcontroller.controllers.ephemeralenv.io
   resources:
   - prephemeralenvcontrollers/status
   verbs:

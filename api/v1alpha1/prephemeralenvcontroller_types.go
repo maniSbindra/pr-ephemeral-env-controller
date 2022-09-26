@@ -60,6 +60,7 @@ type PREphemeralEnvControllerStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.message",description="The status of the resource"
 // PREphemeralEnvController is the Schema for the prephemeralenvcontrollers API
 type PREphemeralEnvController struct {
 	metav1.TypeMeta   `json:",inline"`

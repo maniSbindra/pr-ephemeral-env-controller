@@ -45,9 +45,9 @@ func GetGHClient(ghToken string) *github.Client {
 
 }
 
-func GetActivePullRequests(owner, repo, ghToken string) ([]PRDetails, error) {
+func (r *PREphemeralEnvControllerReconciler) GetActivePullRequests() ([]PRDetails, error) {
 
-	ghClient := GetGHClient(ghToken)
+	ghClient := GetGHClient(r.GHPATToken)
 	if ghClient == nil {
 		return nil, fmt.Errorf("failed to get github client")
 	}
@@ -59,14 +59,14 @@ func GetActivePullRequests(owner, repo, ghToken string) ([]PRDetails, error) {
 		State: "open",
 	}
 
-	pullRequests, _, err := ghClient.PullRequests.List(context.Background(), owner, repo, opts)
+	pullRequests, _, err := ghClient.PullRequests.List(context.Background(), r.GHPRRepo.User, r.GHPRRepo.Repo, opts)
 
 	if err != nil {
 		return nil, err
 	}
 
 	for _, pullRequest := range pullRequests {
-		if pullRequest.GetMerged() == false {
+		if !pullRequest.GetMerged() {
 			prD := PRDetails{
 				Number:         pullRequest.GetNumber(),
 				MergeCommitSHA: pullRequest.GetMergeCommitSHA(),
@@ -81,9 +81,9 @@ func GetActivePullRequests(owner, repo, ghToken string) ([]PRDetails, error) {
 	return activePullRequests, nil
 }
 
-func UpdatePRStatus(context context.Context, owner string, repo string, ghToken string, prNumber int, prSHA string, status string, description string) error {
+func (r *PREphemeralEnvControllerReconciler) UpdatePRStatus(context context.Context, prNumber int, prSHA string, status string, description string) error {
 
-	ghClient := GetGHClient(ghToken)
+	ghClient := GetGHClient(r.GHPATToken)
 	if ghClient == nil {
 		return fmt.Errorf("failed to get github client")
 	}
@@ -93,7 +93,7 @@ func UpdatePRStatus(context context.Context, owner string, repo string, ghToken 
 		Description: &description,
 	}
 
-	_, _, err := ghClient.Repositories.CreateStatus(context, owner, repo, prSHA, repoStatus)
+	_, _, err := ghClient.Repositories.CreateStatus(context, r.GHPRRepo.User, r.GHPRRepo.Repo, prSHA, repoStatus)
 
 	if err != nil {
 		return err

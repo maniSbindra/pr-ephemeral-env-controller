@@ -1,17 +1,15 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 )
 
-func IsEnvReady(prNumber int) bool {
-	prEnvURL := fmt.Sprintf("http://ephenvtestpr%d.eastus.cloudapp.azure.com/", prNumber)
+func IsEnvReady(ephEnvUrl string) bool {
 	client := http.Client{
 		Timeout: 2 * time.Second,
 	}
-	resp, err := client.Get(prEnvURL)
+	resp, err := client.Get(ephEnvUrl)
 	if err != nil {
 		return false
 	}
