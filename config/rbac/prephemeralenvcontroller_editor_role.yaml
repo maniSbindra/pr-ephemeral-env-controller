@@ -1,0 +1,24 @@
+# permissions for end users to edit prephemeralenvcontrollers.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prephemeralenvcontroller-editor-role
+rules:
+- apiGroups:
+  - prcontroller.ephemeralenv.io.prcontroller.ephemeralenv.io
+  resources:
+  - prephemeralenvcontrollers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - prcontroller.ephemeralenv.io.prcontroller.ephemeralenv.io
+  resources:
+  - prephemeralenvcontrollers/status
+  verbs:
+  - get

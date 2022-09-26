@@ -1,0 +1,6 @@
+apiVersion: prcontroller.ephemeralenv.io.prcontroller.ephemeralenv.io/v1alpha1
+kind: PREphemeralEnvController
+metadata:
+  name: prephemeralenvcontroller-sample
+spec:
+  # TODO(user): Add fields here
