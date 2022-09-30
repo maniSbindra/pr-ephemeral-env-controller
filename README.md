@@ -1,10 +1,9 @@
 # pr-ephemeral-env-controller
 
 The Ephemeral environment PR controller is a custom controller which can be configured using a CRD, to observe the application repository (githubPRRepository in CRD) for new PRs and changes to existing PRs. If a new PR is created, the controller creates a new Flux Helm Release, with reference to the the Helm Chart Repository (envCreationHelmRepo in CRD) to be used to create ephemeral environment resources for the PR, as well PR Number and PR SHA to be passed as values to the Helm Chart. 
-The Helm chart needs to make use of the PR Number and PR SHA values supplied, to create appropriate resource names, and pull specific container images that may be needed for the ephemeral environment creation. 
-The Flux Helm Controller then generates these manifests specific to the PR and applies them on the Kubernetes cluster. 
+The Helm chart needs to make use of the PR Number and PR SHA values supplied, to create appropriate resource names, and pull specific container images that may be needed for the ephemeral environment creation. You can design your Helm Chart to create a new environment in separate Namespace for each PR, or totally isolated (including isolated cloud services) environments for each PR. The Flux Helm Controller then generates manifests specific to the PR and applies them on the Kubernetes cluster. 
 
-The configuration of this controller has been kept similar to configuration of a Github [Pull Request Generator](https://argo-cd.readthedocs.io/en/latest/operator-manual/applicationset/Generators-Pull-Request/) with an Argo CD ApplicationSet.
+The configuration of this controller is based on configuration of a Github [Pull Request Generator](https://argo-cd.readthedocs.io/en/latest/operator-manual/applicationset/Generators-Pull-Request/) with an Argo CD ApplicationSet.
 
 ## PR Ephemeral Environment Controller Overview
 
