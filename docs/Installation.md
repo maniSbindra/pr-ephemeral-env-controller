@@ -22,11 +22,14 @@ Once the pre-requisites are setup on the kubernetes cluster, we first install th
   kubectl apply -f docs/install-controller.yaml
   ```
 
-  After this we create a PREphemeralEnvController resource using the script. Please note that a secret containing the Github PAT token needs to be created on the cluster as specified in the spec.tokenSecretRef section of the PREphemeralEnvController manifest file. Once this secret is we can apply the manifest file
+  After this we create a PREphemeralEnvController resource using the manifest. Please note 
+  * A secret containing the Github PAT token needs to be created on the cluster as specified in the spec.tokenSecretRef section of the PREphemeralEnvController manifest file. 
+  * Make sure that flux source has been created for the value specified in spec.envCreationHelmRepo.fluxSourceRepoName
+  Once these configurations are done we can apply the manifest file
 
-  ```
-  kubectl apply -f docs/sample-pr-eph-env-controller-with-healthcheck.yaml
-  ```
+    ```
+    kubectl apply -f docs/sample-pr-eph-env-controller-with-healthcheck.yaml
+    ```
 
 ## Complete setup on kind cluster, including creation of new kind cluster
 
@@ -46,7 +49,11 @@ This project is a kubebuilder project. to run in locally
     ```
     make manifests
     ```
-* After this we create a PREphemeralEnvController resource . Please note that a secret containing the Github PAT token needs to be created on the cluster as specified in the spec.tokenSecretRef section of the PREphemeralEnvController manifest file. Once this secret is we can apply the manifest file
+* After this we create a PREphemeralEnvController resource using the manifest. Please note 
+  * A secret containing the Github PAT token needs to be created on the cluster as specified in the spec.tokenSecretRef section of the PREphemeralEnvController manifest file. 
+  * Make sure that flux source has been created for the value specified in spec.envCreationHelmRepo.fluxSourceRepoName
+  Once these configurations are done we can apply the manifest file
+
     ```
     kubectl apply -f docs/sample-pr-eph-env-controller-with-healthcheck.yaml
     ```
